@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
 
   if(!capture.set(CAP_PROP_FRAME_WIDTH, 320) || !capture.set(CAP_PROP_FRAME_HEIGHT, 240))
     fprintf(stderr, "Warning: error on frame width/height set\n");
-  if!(capture.set(CAP_PROP_FPS, desired_fps))
+  if(!capture.set(CAP_PROP_FPS, desired_fps))
     fprintf(stderr, "Warning: error on FPS\n");
   
   Mat frame;
