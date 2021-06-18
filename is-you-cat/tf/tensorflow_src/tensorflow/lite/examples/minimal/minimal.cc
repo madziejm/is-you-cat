@@ -1,17 +1,3 @@
-/* Copyright 2018 The TensorFlow Authors. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-==============================================================================*/
 #include <cassert>
 #include <cmath>
 #include <cerrno>
@@ -35,22 +21,6 @@ void sigint_handler(int signum) {
   break_loop = 1;
 }
 
-// This is an example that is minimal to read a model
-// from disk and perform inference. There is no data being loaded
-// that is up to you to add as a user.
-//
-// NOTE: Do not add any dependencies to this that cannot be built with
-// the minimal makefile. This example must remain trivial to build with
-// the minimal build tool.
-//
-// Usage: minimal <tflite model>
-
-#define TFLITE_CHECK(x)                              \
-  if (!(x)) {                                                \
-    fprintf(stderr, "Error at %s:%d\n", __FILE__, __LINE__); \
-    exit(1);                                                 \
-  }
-
 using namespace std;
 using namespace std::chrono;
 using namespace cv;
@@ -67,14 +37,16 @@ int main(int argc, char* argv[]) {
   parser.printMessage();
 
   string model_filename = parser.get<String>("model");
+  int camera_device = parser.get<int>("camera");
+  int desired_fps = parser.get<int>("desired-fps");
   max_frame_count = parser.get<size_t>("frame-count");
-  // const char* image_filename = argv[2];
-  // ios_base::sync_with_stdio(false);
+  VideoCapture capture;
+  capture.open(camera_device);
+  assert(capture.isOpened());
 
-  // Load model
   unique_ptr<tflite::FlatBufferModel> model =
       tflite::FlatBufferModel::BuildFromFile(model_filename.c_str());
-  TFLITE_CHECK(model != nullptr);
+  assert(model != nullptr);
 
   signal(SIGINT, sigint_handler);
 
@@ -86,36 +58,13 @@ int main(int argc, char* argv[]) {
   tflite::InterpreterBuilder builder(*model, resolver);
   unique_ptr<tflite::Interpreter> interpreter;
   builder(&interpreter);
-  TFLITE_CHECK(interpreter != nullptr);
+  assert(interpreter != nullptr);
+  assert(interpreter->AllocateTensors() == kTfLiteOk);
 
-  // Allocate tensor buffers.
-  TFLITE_CHECK(interpreter->AllocateTensors() == kTfLiteOk);
-  // printf("=== Pre-invoke Interpreter State ===\n");
-  // tflite::PrintInterpreterState(interpreter.get());
-
-  // Fill input buffers
-  // TODO(user): Insert code to fill input tensors.
-  // Note: The buffer of the input tensor with index `i` of type T can
-  // be accessed with `T* input = interpreter->typed_input_tensor<T>(i);
-
-  int camera_device = 0;
-  // int camera_device = parser.get<int>("camera");
-  VideoCapture capture;
-  capture.open(camera_device);
-  
-  if(!capture.isOpened()) {
-    fprintf(stderr, "Error opening video capture\n");
-    return -1;
-  }
-
-  int desired_fps = parser.get<int>("desired-fps");
-
-  fprintf(stderr,
-    "capture set %d %d %d\n",
-    capture.set(CAP_PROP_FRAME_WIDTH, 320), // TODO assert success
-    capture.set(CAP_PROP_FRAME_HEIGHT, 240), // THIS DOES NOT WORK ON MY DESKTOP!!!!
-    capture.set(CAP_PROP_FPS, desired_fps)
-  );
+  if(!capture.set(CAP_PROP_FRAME_WIDTH, 320) || !capture.set(CAP_PROP_FRAME_HEIGHT, 240))
+    fprintf(stderr, "Warning: error on frame width/height set\n");
+  if!(capture.set(CAP_PROP_FPS, desired_fps))
+    fprintf(stderr, "Warning: error on FPS\n");
   
   Mat frame;
 
@@ -143,7 +92,6 @@ int main(int argc, char* argv[]) {
     resize(frame, frame, {224, 224});
 
     Mat rgb_frame;
-    // Mat rgb_frame = frame;
     cvtColor(frame, rgb_frame, COLOR_BGR2RGB);
     // cerr << rgb_frame.size() << "\n";
     // rgb_frame.convertTo(rgb_frame, CV_32FC3, 1.0f / 255.0f); // now its [0.0, 1.0]
@@ -244,7 +192,7 @@ int main(int argc, char* argv[]) {
     // fprintf(stderr, "%f %f %f\n", input_tensor_data_ptr[0],  input_tensor_data_ptr[1],  input_tensor_data_ptr[2]); // printf drien debugging is my best friend now
 
     // Run inference
-    TFLITE_CHECK(interpreter->Invoke() == kTfLiteOk);
+    assert(interpreter->Invoke() == kTfLiteOk);
     // printf("\n\n=== Post-invoke Interpreter State ===\n");
     // tflite::PrintInterpreterState(interpreter.get());
 
@@ -288,11 +236,6 @@ int main(int argc, char* argv[]) {
 
   fprintf(stdout, "model: %s\ntime run: %.5f\nframe_count: %d\naverage FPS: %.5f\n", model_filename.c_str(), loop_time_ms, frame_count, average_FPS);
 
-
-  // Read output buffers
-  // TODO(user): Insert getting data out code.
-  // Note: The buffer of the output tensor with index `i` of type T can
-  // be accessed with `T* output = interpreter->typed_output_tensor<T>(i);`
 
   capture.release();
 
