@@ -1,0 +1,32 @@
+#include "ONNXModel.hpp"
+
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/dnn.hpp>
+#include <filesystem>
+
+using namespace cv;
+
+ONNXModel::ONNXModel(std::string model_filename) {
+  net = dnn::readNetFromONNX("exported.onnx");
+}
+
+float ONNXModel::forward(const cv::Mat raw_frame)
+{
+    dnn::blobFromImage(raw_frame, blob, 1/255.0, Size(224, 224) , Scalar(0.485, 0.456, 0.406), true, true);
+    divide(blob, Scalar(0.229, 0.224, 0.225), blob);
+
+    net.setInput(blob);
+    Mat prob = net.forward();
+
+    float non_cat_probability = prob.at<float>(0, 0);
+    non_cat_probability = 1.0/(1.0 + exp(-non_cat_probability));
+    return 1.0f - non_cat_probability; // TODO use 0.45 treshold?
+}
+
+bool ONNXModel::accepts(std::string model_filename)
+{
+    std::filesystem::path p = model_filename;
+    return p.extension() == ".onnx";
+}
