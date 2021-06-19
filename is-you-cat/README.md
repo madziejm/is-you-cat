@@ -1,6 +1,6 @@
 # Is You cat
 
-Different ways to produce Cat Detection Neural Network for Embedded device.
+Different ways to produce Cat Detection Neural Network for Embedded devices.
 
 ## OneClassTraining
 Implementation of the method described here https://arxiv.org/pdf/1901.08688.pdf.
