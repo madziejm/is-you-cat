@@ -9,7 +9,7 @@
 using namespace cv;
 
 ONNXModel::ONNXModel(std::string model_filename) {
-  net = dnn::readNetFromONNX("exported.onnx");
+  net = dnn::readNetFromONNX(model_filename);
 }
 
 float ONNXModel::forward(const cv::Mat raw_frame)
