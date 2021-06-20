@@ -24,7 +24,7 @@ set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-point
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native") # -funsafe-math-optimizations?
 set (CMAKE_LINKER_FLAGS_RELEASE "${CMAKE_LINKER_FLAGS_RELEASE} -O3 -march=native")
 
-add_executable(is-you-cat main.cpp ONNXModel.cpp TFModel.cpp TorchModel.cpp CatModelFactory.cpp hsv.cpp rgb.cpp)
+add_executable(is-you-cat main.cpp ONNXModel.cpp ONNXBimodel.cpp TFModel.cpp TorchModel.cpp CatModelFactory.cpp hsv.cpp rgb.cpp AbstractCatModel.cpp)
 
 target_link_libraries(is-you-cat "${TORCH_LIBRARIES}")
 target_link_libraries(is-you-cat "${OpenCV_LIBS}")
@@ -38,3 +38,7 @@ if(CMAKE_CXX_COMPILER STREQUAL "GNU")
     add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
+# add_compile_options(-lstdc++fs)
+
+find_library(STD_CPP_FS stdc++fs)
+target_link_libraries(is-you-cat stdc++fs)

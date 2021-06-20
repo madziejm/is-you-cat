@@ -1,14 +1,15 @@
 #pragma once
 
-#include "CatModelInterface.hpp"
+#include "AbstractCatModel.hpp"
 
 #include <torch/script.h>
 #include <string>
 
-class TorchModel : public CatModelInterface {
+class TorchModel : public AbstractCatModel {
 public:
-  TorchModel(std::string model_filename);
-  float forward(const cv::Mat raw_frame);
+  TorchModel(std::string model_filename, size_t frame_timeout);
+  virtual ~TorchModel();
+  float forward(const cv::Mat& raw_frame);
   static bool accepts(std::string model_filename);
 
 private:

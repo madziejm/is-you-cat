@@ -4,14 +4,14 @@
 #include <opencv2/dnn.hpp>
 #include <string>
 
-#include "CatModelInterface.hpp"
+#include "AbstractCatModel.hpp"
 
-class ONNXModel : public CatModelInterface {
+class ONNXModel : public AbstractCatModel {
 public:
-  ONNXModel(std::string model_filename);
-  virtual float forward(const cv::Mat raw_frame);
+  ONNXModel(std::string model_filename, size_t frame_timeout);
+  virtual ~ONNXModel();
+  virtual float forward(const cv::Mat& raw_frame);
   static bool accepts(std::string model_filename);
 private:
-  cv::Mat blob;
   cv::dnn::Net net;
 };

@@ -4,12 +4,13 @@
 #include "tensorflow/lite/model.h"
 #include <memory>
 
-#include "CatModelInterface.hpp"
+#include "AbstractCatModel.hpp"
 
-class TFModel : public CatModelInterface {
+class TFModel : public AbstractCatModel {
 public:
-  TFModel(std::string model_filename);
-  float forward(const cv::Mat raw_frame);
+  TFModel(std::string model_filename, size_t frame_timeout);
+  virtual ~TFModel();
+  float forward(const cv::Mat& raw_frame);
   static bool accepts(std::string model_filename);
 
 private:

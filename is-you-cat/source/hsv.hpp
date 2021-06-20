@@ -1,7 +1,9 @@
 #pragma once
 
 #include "rgb.hpp"
+
 struct rgb;
+
 struct hsv {
     double h;       // angle in degrees
     double s;       // a fraction between 0 and 1

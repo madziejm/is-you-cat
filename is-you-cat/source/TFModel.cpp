@@ -9,7 +9,7 @@
 
 using namespace cv;
 
-TFModel::TFModel(std::string model_filename) {
+TFModel::TFModel(std::string model_filename, size_t frame_timeout) : AbstractCatModel(frame_timeout) {
   model = tflite::FlatBufferModel::BuildFromFile(model_filename.c_str());
   assert(model != nullptr);
 
@@ -20,7 +20,9 @@ TFModel::TFModel(std::string model_filename) {
   assert(interpreter->AllocateTensors() == kTfLiteOk);
 }
 
-float TFModel::forward(const cv::Mat raw_frame) {
+TFModel::~TFModel() {}
+
+float TFModel::forward(const cv::Mat& raw_frame) {
   Mat rgb_frame;
   cvtColor(raw_frame, rgb_frame, COLOR_BGR2RGB);
   rgb_frame.convertTo(rgb_frame, CV_32FC3, 1.0f / 255.0f); // [0.0, 1.0]
@@ -59,6 +61,7 @@ float TFModel::forward(const cv::Mat raw_frame) {
   float* output_data_ptr = output->data.f;
   float non_catiness = output_data_ptr[0]; // assume model outputs value for negative class
   float non_catiness_sigmoid = 1.0f / (1.0f + exp(-non_catiness));
+
   return 1.0f - non_catiness_sigmoid;
 }
 
