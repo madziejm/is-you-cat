@@ -15,7 +15,7 @@ public:
 private:
   cv::dnn::Net first_net;
   cv::dnn::Net second_net;
-  float MSE_treshold = 1.4;
+  float MSE_treshold = 1.0;
   cv::Mat last_first_net_activations;
   float cached_catiness;
 };

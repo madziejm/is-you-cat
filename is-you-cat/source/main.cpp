@@ -16,6 +16,9 @@
 #include "CatModelFactory.hpp"
 #include "rgb.hpp"
 
+#define CVPLOT_HEADER_ONLY
+#include <CvPlot/core.h>
+
 using namespace std;
 using namespace std::chrono;
 using namespace cv;
@@ -28,7 +31,7 @@ void sigint_handler(int signum) {
   break_loop = 1;
 }
 
-static void put_catiness_text(cv::Mat& frame, float catiness, float class_treshold)
+static void put_catiness_text(cv::Mat& frame, float catiness, float class_treshold, std::vector<float>& catiness_history)
 {
   Mat frame_with_text = frame.clone();
   rgb text_color = interpolate_green_red(catiness);
@@ -39,7 +42,7 @@ static void put_catiness_text(cv::Mat& frame, float catiness, float class_tresho
   const auto text = cat? "cat" : "non-cat";
   cv::putText(frame_with_text,
               text,
-              cv::Point(cat? 89 : 45, frame.rows - 16),
+              cv::Point(cat? 137 : 93, frame.rows - 16),
               cv::FONT_HERSHEY_SIMPLEX,
               1.0,
               cv_text_color,
@@ -49,13 +52,24 @@ static void put_catiness_text(cv::Mat& frame, float catiness, float class_tresho
   addWeighted(frame, alpha, frame_with_text, 1.0 - alpha, 0.0, frame);
   cv::putText(frame,
               std::to_string(catiness),
-              cv::Point(91, frame.rows - 5),
+              cv::Point(139, frame.rows - 5),
               cv::FONT_HERSHEY_SIMPLEX,
               0.3,
               cv_text_color,
               .5,
               cv::LINE_AA
               );
+  CvPlot::Axes axes;
+  axes.setFixedAspectRatio();
+  axes.create<CvPlot::Image>(frame);
+  axes.setMargins(0, 0, 0, 0);
+  axes.setXTight();
+  axes.setYTight();
+  axes.setYReverse();
+  axes.create<CvPlot::Series>(catiness_history, "w-"); // white, line type solid
+
+  // // (frame);
+  frame = axes.render(240, 320);
 }
 
 int main(int argc, const char* argv[]) {
@@ -82,6 +96,9 @@ int main(int argc, const char* argv[]) {
   bool detect_motion = parser.get<bool>("detect-motion");
   bool full_screen = parser.get<bool>("full-screen");
   max_frame_count = parser.get<size_t>("frame-count");
+
+  std::vector<float> catiness_history(320, 240.0f); // screen width times 0.0 catiness, as we do not have history yet, but want nice plot
+  // in fact max value is 0, and min value is 240 (screen height), values are plotted reversed for some reason
 
   VideoCapture capture;
   capture.open(camera_device);
@@ -119,11 +136,8 @@ int main(int argc, const char* argv[]) {
   }
 
   while(capture.read(frame)) {
-      if(frame.empty()) {
-          fprintf(stderr, "No captured frame. Exiting!\n");
-          break;
-      }
-
+      assert(!frame.empty());
+      auto frame_copy = frame.clone();
       assert(frame.type() == CV_8UC3); // 8-bit ints
 
       size_t height = 240, width = 320;
@@ -145,9 +159,12 @@ int main(int argc, const char* argv[]) {
           cat_probability = model->forward(frame);
       }
 
-      put_catiness_text(frame, cat_probability, class_treshold);
+      catiness_history.erase(catiness_history.begin());
+      catiness_history.push_back(240.f - cat_probability * 240.0f); // i do not know how to scale plot (we need to reverse it too)
 
-      imshow(window_name, frame);
+      put_catiness_text(frame_copy, cat_probability, class_treshold, catiness_history);
+
+      imshow(window_name, frame_copy);
 
       if(waitKey(1) == 27 || break_loop) { // ESC
           break; 

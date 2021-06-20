@@ -26,7 +26,7 @@ float AbstractCatModel::is_cat_there(const cv::Mat& raw_frame) {
   cv::Point2d shift = cv::phaseCorrelate(last_frame, current_frame, han);
   double radius = std::sqrt(shift.x * shift.x + shift.y * shift.y);
 
-  if((!frame_timeout || (frame_timeout && frame_timeout <= skipped_frames)) || radius_treshold <= radius) {
+  if((frame_timeout && frame_timeout <= skipped_frames) || radius_treshold <= radius) {
     last_frame = current_frame;
     skipped_frames = 0;
     return cached_catiness = forward(raw_frame);

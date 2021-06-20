@@ -14,6 +14,7 @@ private:
   cv::Mat last_frame;
   cv::Mat han;
   float radius_treshold = 5.0;
+protected:
   float cached_catiness;
   size_t frame_timeout;
   size_t skipped_frames = 0; // counts how many frames were processed without running the model

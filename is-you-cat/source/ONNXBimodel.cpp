@@ -44,9 +44,10 @@ float ONNXBimodel::forward(const cv::Mat& raw_frame)
   // std::cout << first_net_activations_diff.at<float>(0, 0, 0) << std::endl;
   auto mean_scalar = cv::mean(first_net_activations_diff);
   float mean = mean_scalar[0]; // 0-th channel only as activations mat is not image mat, so other channels are zeros
-  // printf("means: %.5f %.5f %.5f %.5f\n", mean_scalar[0], mean_scalar[1], mean_scalar[2], mean_scalar[3]);
+  printf("means: %.5f %.5f %.5f %.5f\n", mean_scalar[0], mean_scalar[1], mean_scalar[2], mean_scalar[3]);
 
-  if(MSE_treshold < mean) {
+  if((frame_timeout && frame_timeout <= skipped_frames) || MSE_treshold < mean) {
+    skipped_frames = 0;
     second_net.setInput(activations);
     Mat prob = second_net.forward();
     float non_cat_probability = prob.at<float>(0, 0);
@@ -54,6 +55,7 @@ float ONNXBimodel::forward(const cv::Mat& raw_frame)
     return cached_catiness = (1.0f - non_cat_probability);
   }
   else {
+    skipped_frames++;
     // printf("%f %f\n", MSE_treshold, mean);
     return cached_catiness;
   }
