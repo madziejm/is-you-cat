@@ -24,13 +24,13 @@ set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-point
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native") # -funsafe-math-optimizations?
 set (CMAKE_LINKER_FLAGS_RELEASE "${CMAKE_LINKER_FLAGS_RELEASE} -O3 -march=native")
 
-add_executable(is-you-cat main.cpp ONNXModel.cpp ONNXBimodel.cpp TFModel.cpp TorchModel.cpp CatModelFactory.cpp hsv.cpp rgb.cpp AbstractCatModel.cpp)
+add_executable(is-you-cat main.cpp ONNXModel.cpp ONNXBimodel.cpp TFModel.cpp TorchModel.cpp CatModelFactory.cpp hsv.cpp rgb.cpp AbstractCatModel.cpp decorate_frame.cpp)
 
 target_link_libraries(is-you-cat "${TORCH_LIBRARIES}")
 target_link_libraries(is-you-cat "${OpenCV_LIBS}")
 target_link_libraries(is-you-cat tensorflow-lite)
 
-INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/vendor/CvPlot/inc)
 
 set_property(TARGET is-you-cat PROPERTY CXX_STANDARD 20)
 

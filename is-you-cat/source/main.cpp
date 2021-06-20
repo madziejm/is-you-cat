@@ -1,6 +1,6 @@
 #include <cassert>
-#include <cstdio>
 #include <cerrno>
+#include <cstdio>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -14,10 +14,7 @@
 
 #include "AbstractCatModel.hpp"
 #include "CatModelFactory.hpp"
-#include "rgb.hpp"
-
-#define CVPLOT_HEADER_ONLY
-#include <CvPlot/core.h>
+#include "decorate_frame.hpp"
 
 using namespace std;
 using namespace std::chrono;
@@ -31,46 +28,7 @@ void sigint_handler(int signum) {
   break_loop = 1;
 }
 
-static void put_catiness_text(cv::Mat& frame, float catiness, float class_treshold, std::vector<float>& catiness_history)
-{
-  Mat frame_with_text = frame.clone();
-  rgb text_color = interpolate_green_red(catiness);
-  float alpha = catiness < 0.5? 10.0 / 3.0 * catiness - 2.0/3.0: -10.0/3.0 * catiness + 8.0 / 3.0;
-  alpha = alpha < 0.0? 0.0 : alpha;
-  const auto cv_text_color = cv::Scalar(255 * text_color.b, 255 * text_color.g, 255 * text_color.r, 1);
-  bool cat = class_treshold <= catiness? true : false;
-  const auto text = cat? "cat" : "non-cat";
-  cv::putText(frame_with_text,
-              text,
-              cv::Point(cat? 137 : 93, frame.rows - 16),
-              cv::FONT_HERSHEY_SIMPLEX,
-              1.0,
-              cv_text_color,
-              1.5,
-              cv::LINE_AA
-              );
-  addWeighted(frame, alpha, frame_with_text, 1.0 - alpha, 0.0, frame);
-  cv::putText(frame,
-              std::to_string(catiness),
-              cv::Point(139, frame.rows - 5),
-              cv::FONT_HERSHEY_SIMPLEX,
-              0.3,
-              cv_text_color,
-              .5,
-              cv::LINE_AA
-              );
-  CvPlot::Axes axes;
-  axes.setFixedAspectRatio();
-  axes.create<CvPlot::Image>(frame);
-  axes.setMargins(0, 0, 0, 0);
-  axes.setXTight();
-  axes.setYTight();
-  axes.setYReverse();
-  axes.create<CvPlot::Series>(catiness_history, "w-"); // white, line type solid
-
-  // // (frame);
-  frame = axes.render(240, 320);
-}
+ViewMode view_mode = ViewModePlot;
 
 int main(int argc, const char* argv[]) {
   CommandLineParser parser(argc, argv,
@@ -104,7 +62,13 @@ int main(int argc, const char* argv[]) {
   capture.open(camera_device);
   assert(capture.isOpened());
 
+  std::string window_name = "Is You Cat";
+  if(full_screen) {
+    namedWindow(window_name, WINDOW_NORMAL);
+    setWindowProperty(window_name, WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
+  }
   signal(SIGINT, sigint_handler);
+  cv::setMouseCallback(window_name, on_mouse_event);
 
   Mat frame;
   capture.read(frame);
@@ -124,16 +88,9 @@ int main(int argc, const char* argv[]) {
   assert(model != nullptr);
 
   const auto loop_start = high_resolution_clock::now();
-  // const auto loop_end = high_resolution_clock::now() + 1000 ;
   auto frame_start = loop_start;
 
   size_t frame_count = 0;
-
-  std::string window_name = "Cat detection";
-  if(full_screen) {
-    namedWindow(window_name, WINDOW_NORMAL);
-    setWindowProperty(window_name, WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
-  }
 
   while(capture.read(frame)) {
       assert(!frame.empty());
@@ -159,10 +116,7 @@ int main(int argc, const char* argv[]) {
           cat_probability = model->forward(frame);
       }
 
-      catiness_history.erase(catiness_history.begin());
-      catiness_history.push_back(240.f - cat_probability * 240.0f); // i do not know how to scale plot (we need to reverse it too)
-
-      put_catiness_text(frame_copy, cat_probability, class_treshold, catiness_history);
+      decorate_frame(frame_copy, cat_probability, class_treshold, catiness_history);
 
       imshow(window_name, frame_copy);
 

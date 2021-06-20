@@ -34,17 +34,9 @@ float ONNXBimodel::forward(const cv::Mat& raw_frame)
   }
 
   Mat first_net_activations_diff = activations - last_first_net_activations;
-  // Mat first_net_activations_diff;
-  // assert(!activations.empty());
-  // assert(!last_first_net_activations.empty());
-  // std::cout << last_first_net_activations.at<float>(0, 0, 0) << std::endl;
-  // std::cout << activations.at<float>(0, 0, 0) << std::endl;
-  // cv::subtract(activations, last_first_net_activations, first_net_activations_diff);
-  first_net_activations_diff = first_net_activations_diff.mul(first_net_activations_diff); //*= first_net_activations_diff;
-  // std::cout << first_net_activations_diff.at<float>(0, 0, 0) << std::endl;
+  first_net_activations_diff = first_net_activations_diff.mul(first_net_activations_diff);
   auto mean_scalar = cv::mean(first_net_activations_diff);
   float mean = mean_scalar[0]; // 0-th channel only as activations mat is not image mat, so other channels are zeros
-  printf("means: %.5f %.5f %.5f %.5f\n", mean_scalar[0], mean_scalar[1], mean_scalar[2], mean_scalar[3]);
 
   if((frame_timeout && frame_timeout <= skipped_frames) || MSE_treshold < mean) {
     skipped_frames = 0;
@@ -56,7 +48,6 @@ float ONNXBimodel::forward(const cv::Mat& raw_frame)
   }
   else {
     skipped_frames++;
-    // printf("%f %f\n", MSE_treshold, mean);
     return cached_catiness;
   }
 }
