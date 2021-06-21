@@ -63,10 +63,9 @@ int main(int argc, const char* argv[]) {
   assert(capture.isOpened());
 
   std::string window_name = "Is You Cat";
-  if(full_screen) {
-    namedWindow(window_name, WINDOW_NORMAL);
+  namedWindow(window_name, WINDOW_NORMAL);
+  if(full_screen)
     setWindowProperty(window_name, WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
-  }
   signal(SIGINT, sigint_handler);
   cv::setMouseCallback(window_name, on_mouse_event);
 
@@ -105,6 +104,9 @@ int main(int argc, const char* argv[]) {
       resize(frame, frame, {224, 224});
 
       float cat_probability;
+
+      // if(0 == frame_count % 10)
+      //   on_mouse_event(0, 0, 0, 0, nullptr);
 
       if(bi_model)
         cat_probability = model->forward(frame);
