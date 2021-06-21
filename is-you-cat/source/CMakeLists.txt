@@ -24,7 +24,7 @@ set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-point
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native") # -funsafe-math-optimizations?
 set (CMAKE_LINKER_FLAGS_RELEASE "${CMAKE_LINKER_FLAGS_RELEASE} -O3 -march=native")
 
-add_executable(is-you-cat main.cpp ONNXModel.cpp ONNXBimodel.cpp TFModel.cpp TorchModel.cpp CatModelFactory.cpp hsv.cpp rgb.cpp AbstractCatModel.cpp decorate_frame.cpp)
+add_executable(is-you-cat main.cpp HaarCascadeModel.cpp ONNXModel.cpp ONNXBimodel.cpp TFModel.cpp TorchModel.cpp CatModelFactory.cpp hsv.cpp rgb.cpp AbstractCatModel.cpp decorate_frame.cpp)
 
 target_link_libraries(is-you-cat "${TORCH_LIBRARIES}")
 target_link_libraries(is-you-cat "${OpenCV_LIBS}")

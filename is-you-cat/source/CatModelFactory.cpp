@@ -1,10 +1,13 @@
 #include "CatModelFactory.hpp"
-#include "ONNXModel.hpp"
+#include "HaarCascadeModel.hpp"
 #include "ONNXBimodel.hpp"
+#include "ONNXModel.hpp"
 #include "TFModel.hpp"
 #include "TorchModel.hpp"
 
 std::unique_ptr<AbstractCatModel> CatModelFactory::produce(std::string model_filename, size_t frame_timeout) {
+    if(HaarCascadeModel::accepts(model_filename))
+        return std::make_unique<HaarCascadeModel>(model_filename, frame_timeout);
     if(ONNXModel::accepts(model_filename))
         return std::make_unique<ONNXModel>(model_filename, frame_timeout);
     if(TFModel::accepts(model_filename))
