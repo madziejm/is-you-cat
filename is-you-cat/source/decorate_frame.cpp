@@ -25,14 +25,14 @@ void frame_put_text(cv::Mat& frame, float catiness, float class_treshold) {
   if(view_mode & ViewModeTextPolish) {
     const auto text = cat? "TAK" : "NIE";
     if(view_mode & ViewModeTextBig)
-      cv::putText(frame_with_text, text, cv::Point(cat? 0 : 10, 180), cv::FONT_HERSHEY_SIMPLEX, 6.0, cv_text_color, 2.5, cv::LINE_AA);
+      cv::putText(frame_with_text, text, cv::Point(cat? 0 : 10, 180), cv::FONT_HERSHEY_SIMPLEX, 6.0, cv_text_color, 10.0, cv::LINE_AA);
     else
       cv::putText(frame_with_text, text, cv::Point(137, frame.rows - 16), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv_text_color, 1.5, cv::LINE_AA);
   }
   else {
     if(view_mode & ViewModeTextBig) {
       const auto text = cat? "YES" : "NO";
-      cv::putText(frame_with_text, text, cv::Point(cat? -5 : 30, 180), cv::FONT_HERSHEY_SIMPLEX, 6.0, cv_text_color, 2.5, cv::LINE_AA);
+      cv::putText(frame_with_text, text, cv::Point(cat? -5 : 30, 180), cv::FONT_HERSHEY_SIMPLEX, 6.0, cv_text_color, 10.0, cv::LINE_AA);
     }
     else {
       const auto text = cat? "cat" : "non-cat";
