@@ -38,7 +38,7 @@ int main(int argc, const char* argv[]) {
                             "{desired-fps|30|Desired camera FPS}"
                             "{frame-count|0|After how many frames to exit (0 means run endlessly)}"
                             "{second-model||Second part of split model if --model is split model's first part (optional)}"
-                            "{frame-timeout|10|After how many frames force model run (0 means never)}"
+                            "{frame-timeout|10|After how many frames force model run (0 means always, -1 means never)}"
                             "{class-treshold|0.5|What is the probability treshold for being cat (if model outputs positive class (cat) probability greater than class-treshold then input will be reported as cat)}"
                             "{detect-motion|true|Whether to stop model running when no motion detected}"
                             "{full-screen|false|Run app in full screen mode}"

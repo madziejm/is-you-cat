@@ -38,7 +38,10 @@ float ONNXBimodel::forward(const cv::Mat& raw_frame)
   auto mean_scalar = cv::mean(first_net_activations_diff);
   float mean = mean_scalar[0]; // 0-th channel only as activations mat is not image mat, so other channels are zeros
 
-  if((frame_timeout && frame_timeout <= skipped_frames) || MSE_treshold < mean) {
+  bool frame_change = MSE_treshold < mean;
+  bool force_model_forward = (frame_timeout == 0) || ((frame_timeout != -1) && (frame_timeout <= skipped_frames));
+
+  if(force_model_forward || frame_change) {
     skipped_frames = 0;
     second_net.setInput(activations);
     Mat prob = second_net.forward();
