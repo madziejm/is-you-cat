@@ -1,25 +1,32 @@
 # ISYOUCAT - FINAL REPORT
 
-# Model training
+## Project goals
 
-## Dataset
+* Implement deep neural network one class classifier that detects cats in a camera video stream
+* Keep both high performance and low model size
+* Build and deploy the hardware
+* Achieve ~15 FPS (the display limit)
+
+## Model training
+
+### Dataset
 
 Certainly we needed a lot of cat pictures to our cat detector. Both tested methods used cats from the *[Cats vs Dogs](https://www.kaggle.com/karakaggle/kaggle-cat-vs-dog-dataset)* dataset (12.5K images). For one class training that was enough. For naive one class training we needed pictures of negative class (all non-cat objects). We approximate that with *Caltech-101* (9,146 images) and *Caltech-256* datasets (30,607 images). During the first weeks of our work on models, we assumed that there are no cat-looking animals in those datasets. After getting mediocre results on real-life tests, we decided to manually clear pictures of catlike animals/objects.
 
-## Models
+### Models
 
-### HarrCascades
+#### HarrCascades
 
 These pretrained models are what we have chosen for the baseline. The results were not satisfying, but we have not tried to improve them (ie. track why they were so bad), because it was not what our projects was meant to be.
 
-### One Class Training
+#### One Class Training
 
 Reference: [https://arxiv.org/pdf/1901.08688.pdf](https://arxiv.org/pdf/1901.08688.pdf)
 The first method we tried was One Class Training. This model consists of two following parts: a feature extractor and a multi-layer perceptron. After feature extraction, the data samples are ‘corrupted’ by adding some zero-centered gaussian noise. These modified samples are then concatenated batchwise with their original pairs. The result of this approach is that we have a duplicated batch of images formed by original samples (class 1) and corrupted ones (class 0). The pretrained models we used for feature extractor were: VGG, ResNet, Google Inception, MobileNetV3, due to unknown reason the model were able to train only with VGG. 
 
 ![](https://i.imgur.com/Zx9rRf5.png)
 
-### "Naive" One Class Training
+#### "Naive" One Class Training
 
 After failing to make use of one-class approach we decided to follow more naive one ie. training using data set with positive and negative class samples instead of positive class ones only. We trained our models using transfer learning.
 
@@ -47,12 +54,12 @@ Models we tried were:
 |          TensorFlow-MobilenetV2           | 94.82%   |
 
 
-# Model performance optimisation
+## Model performance optimisation
 
-## Picking suitable model
+### Picking suitable model
 At this point we have benchmarked models in PyTorch, and the horrible performance made us choose the smallest model, MobileNetV3. We have also decided to heavliy cut the last fully connected layers.
 
-## Pruning and Quantization
+### Pruning and Quantization
 We have briefly experimented with pruning and quantization.
 - Pruning. This has been covered in the class, so we'll assume brief knowledge on what pruning is, and how it works. In PyTorch, there are two options for pruning. There is:
     - Unstructured Pruning. This option is the simplest and implemented the best since you can just say how many network connections you want to have pruned out. We managed to remove up to 50% of the network* while keeping error rates reasonable. However, pruning your network requires you to switch to sparse matrix representations that absolutely kill any performance. 
@@ -61,7 +68,7 @@ We have briefly experimented with pruning and quantization.
 
 - Quantization. This is a method of converting network from `fp32` (32-bit floating point) representation to `int8` one. While this might seem like a reasonable solution at first, it's only beneficial when one needs to heavily optimize model size (not our case since we have 4GiB of ram) or is running the model on a processor without an FPU or with very little FP power (again, not our case). As the last nail to the coffin, the `int8` computation increases operation count, and while it should be faster than emulation of `fp32`, it makes absolutelly zero sense when one is using a processor with FPU.
 
-## Model exporting
+### Model exporting
 There are two proper ways of exporting a model. 
 - for PyTorch, one would use torch JIT and export the model into a `.pt` file
 - for TensorFlow, one would use `TFLiteConverter()` and export into a `.tflite` file
@@ -92,7 +99,7 @@ With our model running 25FPS, we decided that it was the time to leave the model
 ***
 In retrospect we now know that the OpenCV DNN module allows adding a custom operator inside user client code. While the workload looks more or less the same, it's probably advised to go that route, since one doesn't need to recompile entire OpenCV if the operator is somehow broken.
 
-## Tricks for performance boosting
+### Tricks for performance boosting
 At this point, we had a model that would run comfortably with 25 FPS. That's a lot, and actually way more than we hoped for initially. However, there is still a case to be made for increasing the model performance even further. While the model got 25 FPS, it did so while pushing the Raspberry Pi CPU with 400% util. This is obviously undesirable. At this point, the easiest way out of this would be to push the model even further (30 FPS) and just run it every other frame. While this is a neat solution, there are neater ones, that will run the model only if the frame changes.
 - [Phase Correlation](https://docs.OpenCV.org/master/d7/df3/group__imgproc__motion.html#ga552420a2ace9ef3fb053cd630fdb4952)
   To keep this report reasonably long we won't go into detail on how frequency domain <something something> FFT bs thing works. What matters, is that it's an already implemented part of OpenCV that will basically tell you if the image has moved. Once the movement exceeds a treshold, you run the network once again.
@@ -117,7 +124,3 @@ We were to dumb to build our app for Raspberry Pi on our desktop using toolchain
 ## Closing remarks
 
 Never again. We have poured so many hours and cash into a meme that's not even remotely funny.
-
-## Cat pictures
-
-
